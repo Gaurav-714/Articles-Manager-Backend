@@ -9,4 +9,5 @@ urlpatterns = [
     path('forgot-password', SendMailWithOTPView.as_view()),
     path('set-new-password', SetNewPasswordView.as_view()),
     path('create-role', CreateAdminOrModeratorView.as_view()),
+    path('request-approval', SubmitApprovalRequestView.as_view()),
 ]
