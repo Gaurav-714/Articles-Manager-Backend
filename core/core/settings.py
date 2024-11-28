@@ -59,7 +59,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'accounts.pagination.CustomPagination',
+    'DEFAULT_PAGINATION_CLASS': 'article.pagination.CustomPagination',
     'PAGE_SIZE': 10,
 }
 
