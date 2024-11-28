@@ -35,7 +35,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsAdmin | IsModerator]
+    permission_classes = [IsAuthenticated]
 
     # Pagination, Filtering, and Search
     pagination_class = CustomPagination

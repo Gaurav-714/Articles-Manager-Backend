@@ -26,6 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         try:
             validate_email(data['email'])
+            return data
         except ValidationError:
             raise ValidationError("Please provide a valid email address.")
 

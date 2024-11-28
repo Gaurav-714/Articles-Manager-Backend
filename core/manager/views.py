@@ -6,8 +6,9 @@ from django.core.exceptions import PermissionDenied
 
 from accounts.models import UserModel
 from manager.permissions import IsAdmin, IsModerator
-from .serializers import RoleCreateSerializer, ApprovalRequestSerializer
+from .serializers import RoleCreateSerializer, ChangeRoleSerializer, ApprovalRequestSerializer
 from .models import WriteApprovalRequest
+
 
 class CreateAdminOrModeratorView(APIView):
     permission_classes = [IsAdmin]  # Only Admins can access this view
@@ -74,6 +75,70 @@ class CreateAdminOrModeratorView(APIView):
                 'is_staff': user.is_staff,
                 'is_superuser': user.is_superuser,
                 'has_approval': user.has_approval
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        
+        except Exception as ex:
+            print(ex)
+            return Response({
+                "success" : False,
+                "message" : "Something went wrong. Please try again.",
+            }, status = status.HTTP_400_BAD_REQUEST)
+
+
+class ChangeRoleView(APIView):
+    permission_classes = [IsAdmin]  # Only Admins can access this view
+
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            role = data.get('role')
+
+            serializer = ChangeRoleSerializer(data=data)
+            if not serializer.is_valid():
+                return Response({
+                    "success" : False,
+                    "message": "Invalid data.",
+                    "errors": serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if the user has admin permissions to create other admins or moderators
+            if request.user.role != 'admin':
+                raise PermissionDenied("You do not have permission to perform this action.")
+            
+            # Validate the role field
+            if role not in ['admin', 'moderator']:
+                return Response({
+                    "success" : False,
+                    "message": "Invalid role. Role must be either 'admin', 'moderator'."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            user_obj = UserModel.objects.filter(email=data['email']).first()
+            user_obj.role = serializer.validated_data['role']
+            user_obj.is_active=True,
+            user_obj.is_staff=True,
+            user_obj.has_approval=True
+
+             # If the role is admin, assign a superuser, otherwise create a moderator
+            if role == 'admin':
+                user_obj.is_superuser=True,
+                user_obj.save()
+            else:
+                user_obj.is_superuser=False,
+                user_obj.save()
+
+            response_data = {
+                'success': True,
+                'message': f'{user_obj.role.capitalize()} changed successfully.',
+                'uid': user_obj.uid,
+                'email': user_obj.email,
+                'first_name': user_obj.first_name,
+                'last_name': user_obj.last_name,
+                'role': user_obj.role,
+                'is_active': user_obj.is_active,
+                'is_staff': user_obj.is_staff,
+                'is_superuser': user_obj.is_superuser,
+                'has_approval': user_obj.has_approval
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         

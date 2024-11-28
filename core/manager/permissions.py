@@ -13,8 +13,7 @@ class IsAdmin(BasePermission):
         # Admins can access all articles
         if request.user.is_superuser or request.user.role == 'admin':
             return True
-        # Users can only edit or delete their own articles
-        return obj.author == request.user
+        return obj.author == request.user # Users can only edit or delete their own articles
 
 
 # Custom permission to only allow "Moderator" to perform certain actions.
@@ -29,5 +28,4 @@ class IsModerator(BasePermission):
         # Moderators can access all articles
         if request.user.role == 'moderator':
             return True
-        # Users can only edit or delete their own articles
-        return obj.author == request.user
+        return obj.author == request.user # Users can only edit or delete their own articles

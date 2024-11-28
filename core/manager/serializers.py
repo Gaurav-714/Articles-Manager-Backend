@@ -34,6 +34,25 @@ class RoleCreateSerializer(serializers.ModelSerializer):
         return data
 
 
+class ChangeRoleSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)  
+
+    class Meta:
+        model = UserModel
+        fields = ['uid', 'email', 'role']
+        read_only_fields = ['uid', 'is_active', 'is_staff', 'is_superuser', 'has_approval']        
+
+    def validate(self, data):
+        try:
+            validate_email(data['email'])
+        except ValidationError:
+            raise ValidationError("Please provide a valid email address.")
+        
+        if not UserModel.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError({'email': 'No user with this email exists.'})
+        return data
+
+
 class ApprovalRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = WriteApprovalRequest
