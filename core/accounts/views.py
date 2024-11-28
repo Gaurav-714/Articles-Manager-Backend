@@ -1,11 +1,11 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from django.core.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
 
-from rest_framework.views import exception_handler
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
@@ -14,9 +14,11 @@ from django.core.validators import validate_email
 from django.conf import settings
 from random import randint
 
+from manager.models import WriteApprovalRequest
+from manager.serializers import ApprovalRequestSerializer
 from .serializers import RegisterSerializer, LoginSerializer, RoleCreateSerializer
 from .models import UserModel, AccountVerificationOTP
-from .permissions import IsAdmin, IsModerator
+from .permissions import IsAdmin
 
 
 # Function to send email for verification
@@ -335,4 +337,44 @@ class SetNewPasswordView(APIView):
                 "message": "Something went wrong. Please try again."
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-     
+        
+class SubmitApprovalRequestView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            if request.user.has_approval:
+                return Response({
+                    "success": False,
+                    "error": "You are already approved to write articles."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer = ApprovalRequestSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            message = request.data.get('message')
+            WriteApprovalRequest.objects.create(user=request.user, message=message)
+
+            return Response({
+                "status": True,
+                "message": "Request submitted successfully. Our team will update you soon."
+            }, status=status.HTTP_201_CREATED)
+        
+        except ValidationError as ex:
+            return Response({
+                "success": False,
+                "error": str(ex)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        except IntegrityError:
+            return Response({
+                "success": False,
+                "error": "An error occurred while processing your request. Please try again."
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        except Exception as e:
+            return Response({
+                "success": False,
+                "error": f"An unexpected error occurred: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
