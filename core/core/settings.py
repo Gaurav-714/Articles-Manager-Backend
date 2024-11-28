@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'manager',
+    'article',
 ]
 
 AUTH_USER_MODEL = 'accounts.UserModel'
@@ -55,6 +56,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'accounts.pagination.CustomPagination',
+    'PAGE_SIZE': 10,
 }
 
 
