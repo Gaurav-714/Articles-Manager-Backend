@@ -28,8 +28,8 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length = 50)
     last_name = models.CharField(max_length = 50)
 
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     ROLE_CHOICES = [
         ('admin', 'Admin'),
@@ -51,12 +51,12 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
         return f'{self.email}'
 
 
-
 class AccountVerificationOTP(models.Model):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     otp = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
-    used = models.BooleanField(default=False)
+    is_used = models.BooleanField(default=False)
 
     def is_valid(self): 
-        return (not self.used and (timezone.now() - self.created_at).total_seconds() < 600)
+        return (not self.is_used and (timezone.now() - self.created_at).total_seconds() < 600)
+    

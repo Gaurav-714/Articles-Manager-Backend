@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.core.validators import validate_email
 
 UserModel = get_user_model()
 
@@ -20,6 +22,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         except ValidationError as e:
             raise serializers.ValidationError(list(e.messages))
         return value
+    
+    def validate(self, data):
+        try:
+            validate_email(data['email'])
+        except ValidationError:
+            raise ValidationError("Please provide a valid email address.")
 
     def create(self, validated_data):
         user = UserModel.objects.create_user(
@@ -31,12 +39,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-
 class LoginSerializer(serializers.Serializer):
     email = serializers.CharField()
     password = serializers.CharField()
 
     def validate(self, data):
+        try:
+            validate_email(data['email'])
+        except ValidationError:
+            raise ValidationError("Please provide a valid email address.")
+        
         user = UserModel.objects.filter(email=data['email']).first()
         if not user:
             raise serializers.ValidationError("Account not found.")
@@ -72,7 +84,7 @@ class RoleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ['uid', 'email', 'first_name', 'last_name', 'role', 'password', 'is_active', 'is_staff', 'is_superuser']
-        read_only_fields = ['uid', 'is_active', 'is_staff', 'is_superuser', 'has_approval']
+        read_only_fields = ['uid', 'is_active', 'is_staff', 'is_superuser', 'has_approval']        
 
     def validate_password(self, value):
         try:
@@ -82,7 +94,13 @@ class RoleCreateSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        try:
+            validate_email(data['email'])
+        except ValidationError:
+            raise ValidationError("Please provide a valid email address.")
+        
         if UserModel.objects.filter(email=data['email']).exists():
             raise serializers.ValidationError({'email': 'A user with this email already exists.'})
         return data
+
 
