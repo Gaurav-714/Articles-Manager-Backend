@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from django.core.mail import send_mail
@@ -14,11 +14,10 @@ from django.core.validators import validate_email
 from django.conf import settings
 from random import randint
 
-from manager.models import WriteApprovalRequest
 from manager.serializers import ApprovalRequestSerializer
-from .serializers import RegisterSerializer, LoginSerializer, RoleCreateSerializer
+from manager.models import WriteApprovalRequest
+from .serializers import RegisterSerializer, LoginSerializer
 from .models import UserModel, AccountVerificationOTP
-from .permissions import IsAdmin
 
 
 # Function to send email for verification
@@ -190,82 +189,6 @@ class LoginView(APIView):
                 "message" : "Error occured. Check details",
                 "error" : serializer.errors
             }, status = status.HTTP_400_BAD_REQUEST)
-        
-        except Exception as ex:
-            print(ex)
-            return Response({
-                "success" : False,
-                "message" : "Something went wrong. Please try again.",
-            }, status = status.HTTP_400_BAD_REQUEST)
-
-
-class CreateAdminOrModeratorView(APIView):
-    permission_classes = [IsAdmin]  # Only Admins can access this view
-
-    def post(self, request, *args, **kwargs):
-        try:
-            data = request.data
-            role = data.get('role')
-
-            serializer = RoleCreateSerializer(data=data)
-            if not serializer.is_valid():
-                return Response({
-                    "success" : False,
-                    "message": "Invalid data.",
-                    "errors": serializer.errors
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Check if the user has admin permissions to create other admins or moderators
-            if request.user.role != 'admin':
-                raise PermissionDenied("You do not have permission to perform this action.")
-            
-            # Validate the role field
-            if role not in ['admin', 'moderator']:
-                return Response({
-                    "success" : False,
-                    "message": "Invalid role. Role must be either 'admin' or 'moderator'."
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # If the role is admin, create a superuser, otherwise create a moderator
-            if role == 'admin':
-                user = UserModel.objects.create_superuser(
-                    email=serializer.validated_data['email'],
-                    first_name=serializer.validated_data['first_name'],
-                    last_name=serializer.validated_data['last_name'],
-                    password=serializer.validated_data['password'],
-                    role=serializer.validated_data['role'],
-                    is_active=True,
-                    is_staff=True,
-                    is_superuser=True,
-                    has_approval=True
-                )
-            else:
-                user = UserModel.objects.create_moderator(
-                    email=serializer.validated_data['email'],
-                    first_name=serializer.validated_data['first_name'],
-                    last_name=serializer.validated_data['last_name'],
-                    password=serializer.validated_data['password'],
-                    role=serializer.validated_data['role'],
-                    is_active=True,
-                    is_staff=True,
-                    is_superuser=False,
-                    has_approval=True
-                )
-
-            response_data = {
-                'success': True,
-                'message': f'{user.role.capitalize()} created successfully.',
-                'uid': user.uid,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'is_active': user.is_active,
-                'is_staff': user.is_staff,
-                'is_superuser': user.is_superuser,
-                'has_approval': user.has_approval
-            }
-            return Response(response_data, status=status.HTTP_201_CREATED)
         
         except Exception as ex:
             print(ex)
