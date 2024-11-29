@@ -1,5 +1,5 @@
 
-# Article Management Backend API
+# Articles Manager Backend API
 
 This repository contains the backend API for the **Articles Management System**, this Content Management System (CMS) is designed to handle comprehensive article and user management. Built using **Django REST Framework**, it integrates advanced **Role-Based Access Control (RBAC)** to enforce security and functionality segregation, ensuring a robust and scalable system.
 
