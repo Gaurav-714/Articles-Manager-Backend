@@ -33,7 +33,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'manager',
-    'content',
+    'article',
 ]
 
 AUTH_USER_MODEL = 'accounts.UserModel'
