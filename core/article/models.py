@@ -26,7 +26,7 @@ class Article(models.Model):
     content = models.TextField()
 
     author = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     tags = models.ManyToManyField(Tag, related_name="articles")
 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -33,7 +33,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'manager',
-    'article',
+    'content',
 ]
 
 AUTH_USER_MODEL = 'accounts.UserModel'
@@ -58,6 +58,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
     ),
     'DEFAULT_PAGINATION_CLASS': 'article.pagination.CustomPagination',
     'PAGE_SIZE': 10,

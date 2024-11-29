@@ -1,12 +1,17 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import SearchFilter
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import PermissionDenied
 
 from accounts.models import UserModel
-from manager.permissions import IsAdmin, IsModerator
+from article.pagination import CustomPagination
 from .serializers import RoleCreateSerializer, ChangeRoleSerializer, ApprovalRequestSerializer
+from .permissions import IsAdmin, IsModerator
+from .filters import RequestsFilter
 from .models import WriteApprovalRequest
 
 
@@ -150,14 +155,22 @@ class ChangeRoleView(APIView):
             }, status = status.HTTP_400_BAD_REQUEST)
 
 
-class HandleApprovalRequestView(APIView):
-    permission_classes = [IsAdmin, IsModerator]
-    authentication_classes = [JWTAuthentication]
+class ApprovalRequestsListView(viewsets.ReadOnlyModelViewSet):
+    queryset = WriteApprovalRequest.objects.filter().order_by('-created_at')
+    serializer_class = ApprovalRequestSerializer
 
-    def get(self, request):        
-        requests = WriteApprovalRequest.objects.filter(status='pending')
-        serializer = ApprovalRequestSerializer(requests, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAdmin | IsModerator]
+
+    # Pagination and Filtering
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = RequestsFilter
+
+
+class HandleApprovalRequestView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdmin | IsModerator]
 
     def post(self, request, uid):        
         try:
@@ -192,3 +205,4 @@ class HandleApprovalRequestView(APIView):
                 "success": False,
                 "error": "Request not found."
             }, status=status.HTTP_404_NOT_FOUND)
+

@@ -2,10 +2,8 @@ from django_filters import rest_framework as filters
 from .models import Article, Category, Tag
 
 class ArticleFilter(filters.FilterSet):
-    category_name = filters.CharFilter(field_name="category__name", lookup_expr="icontains")
-    category_description = filters.CharFilter(field_name="category__description", lookup_expr="icontains")
-
-    tag_name = filters.CharFilter(field_name="tags__name", lookup_expr="icontains")
+    category = filters.CharFilter(field_name="category__name", lookup_expr="icontains")
+    tag = filters.CharFilter(field_name="tags__name", lookup_expr="icontains")
 
     author_email = filters.CharFilter(field_name="author__email", lookup_expr="icontains")
     author_first_name = filters.CharFilter(field_name="author__first_name", lookup_expr="icontains")
