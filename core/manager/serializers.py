@@ -57,3 +57,8 @@ class ApprovalRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = WriteApprovalRequest
         fields = ['uid', 'user', 'status', 'message', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        if data['user'].has_approval:
+            raise ValidationError("You are already approved to write articles.")
+        return data

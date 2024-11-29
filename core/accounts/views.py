@@ -266,13 +266,7 @@ class SubmitApprovalRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        try:
-            if request.user.has_approval:
-                return Response({
-                    "success": False,
-                    "error": "You are already approved to write articles."
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
+        try:            
             serializer = ApprovalRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 

@@ -5,7 +5,7 @@ from rest_framework.permissions import BasePermission
 class IsAdmin(BasePermission):
     def has_permission(self, request, view):
         # Check if the user is authenticated and has an 'admin' role
-        if request.user.is_authenticated and request.user.role == 'admin':
+        if request.user.is_authenticated or request.user.role == 'admin':
             return True
         return False
 
@@ -20,7 +20,7 @@ class IsAdmin(BasePermission):
 class IsModerator(BasePermission):
     def has_permission(self, request, view):
         # Check if the user is authenticated and has a 'moderator' role
-        if request.user.is_authenticated and request.user.role == 'moderator':
+        if request.user.is_authenticated or request.user.role == 'moderator':
             return True
         return False
 
