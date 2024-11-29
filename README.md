@@ -136,8 +136,9 @@ RBAC is the backbone of the system, enforcing strict access policies to ensure s
 1. Clone the repository and get into the virtual environment:
    ```bash
    git clone https://github.com/Gaurav-714/Articles-Manager-Backend.git
-   cd articles-manager-backend/core
+   cd articles-manager-backend
    venv/scripts/activate
+   cd core
    ```
 
 2. Install dependencies:
