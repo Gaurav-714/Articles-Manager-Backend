@@ -103,21 +103,17 @@ RBAC is the backbone of the system, enforcing strict access policies to ensure s
 - `DELETE /api/articles/{uid}/` - Delete an article (Author/Moderator/Admin).
 
 ### Comments
-- `POST /articles/{uid}/comments/` - Add a comment.
-- `GET /articles/{uid}/comments/` - List comments on an article (with search and pagination).
-- `PUT /comments/{uid}/` - Edit a comment (Author/Moderator/Admin).
-- `DELETE /comments/{uid}/` - Delete a comment (Author/Moderator/Admin).
+- `POST /api/comments/` - Add a comment.
+- `GET /api/comments/{uid}/article_comments/` - List comments on an article (with search and pagination).
+- `PUT /api/comments/{uid}/` - Edit a comment (Author/Moderator/Admin).
+- `DELETE /api/comments/{uid}/` - Delete a comment (Author/Moderator/Admin).
 
 ### Categories and Tags
-- `POST /categories/` - Create a category (Moderator/Admin).
-- `GET /categories/` - List categories (with filters and pagination).
-- `PUT /categories/{id}/` - Edit a category (Moderator/Admin).
-- `DELETE /categories/{id}/` - Delete a category (Moderator/Admin).
+- `POST /api/categories/` - Create a category (Moderator/Admin).
+- `GET /api/categories/` - List categories (with filters and pagination).
+- `PUT /api/categories/{id}/` - Edit a category (Moderator/Admin).
+- `DELETE /api/categories/{id}/` - Delete a category (Moderator/Admin).
 - Same endpoints are available for tags (replace 'categories' with 'tags').
-
-### User Management
-- `GET /users/` - List all users (Admin only, with pagination).
-- `PATCH /users/{uid}/role/` - Assign or modify a user's role (Admin only).
 
 ## System Workflow
 
