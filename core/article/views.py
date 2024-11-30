@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 
 from .permissions import IsAdmin, IsModerator
 from .serializers import ArticleSerializer, CommentSerializer, CategorySerializer, TagSerializer
-from .filters import ArticleFilter, CategoryFilter, TagFilter
+from .filters import ArticleFilter, CategoryFilter, TagFilter, CommentFilter
 from .models import Article, Comment, Category, Tag
 from .pagination import CustomPagination
 
@@ -106,13 +106,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]  # Only authenticated users can access
+    permission_classes = [IsAdmin | IsModerator]
 
     # Pagination, Filtering, and Search
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['article', 'author__email', 'author__first_name']  # Filtering on article and author details
-    search_fields = ['content']  # Allows searching by comment's content
+    filterset_class = CommentFilter  
+    search_fields = ['comment']
 
     def perform_create(self, serializer):
         try:
@@ -141,8 +141,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     # Custom method to retrieve comments for a specific article
     @action(detail=True, methods=['get'])
-    def article_comments(self, request, pk=None):
-        article = get_object_or_404(Article, pk=pk)
+    def article_comments(self, request, uid=None):
+        article = get_object_or_404(Article, uid=uid)
         comments = self.queryset.filter(article=article)
         page = self.paginate_queryset(comments)
         if page is not None:

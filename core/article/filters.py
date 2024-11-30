@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from .models import Article, Category, Tag
+from .models import Article, Category, Tag, Comment
 
 class ArticleFilter(filters.FilterSet):
     category = filters.CharFilter(field_name="category__name", lookup_expr="icontains")
@@ -29,3 +29,16 @@ class TagFilter(filters.FilterSet):
     class Meta:
         model = Tag
         fields = ['name']
+
+
+class CommentFilter(filters.FilterSet):
+    article_title = filters.CharFilter(field_name="article__title", lookup_expr="icontains")
+    comment = filters.CharFilter(field_name="comment", lookup_expr="icontains")
+
+    author_email = filters.CharFilter(field_name="author__email", lookup_expr="icontains")
+    author_first_name = filters.CharFilter(field_name="author__first_name", lookup_expr="icontains")
+    author_last_name = filters.CharFilter(field_name="author__last_name", lookup_expr="icontains")
+
+    class Meta:
+        model = Comment
+        fields = ['article', 'author_email', 'author_first_name', 'author_last_name', 'comment']
