@@ -39,8 +39,10 @@ class ArticleAndCommentPermissions(BasePermission):
         # Allow read-only access for any authenticated user
         if request.method == 'GET':
             return True
-        # Allow authors to modify/delete their own articles
-        return obj.author == request.user
+        if request.method in ['PUT','PATCH','DELETE']:
+            # Allow authors to modify/delete their own articles
+            return obj.author == request.user
+        
 
 
 class CategoryAndTagPermissions(BasePermission):

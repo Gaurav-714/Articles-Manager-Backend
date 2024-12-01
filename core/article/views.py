@@ -93,9 +93,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'content', 'category__name', 'tags__name']
 
     def perform_create(self, serializer):
-        # The serializer now handles category and tag creation, no need to do it here.
         article = serializer.save(author=self.request.user)
-        # Tags are already handled by the serializer (via tags.set), so no need to explicitly set them here.
         return article
 
     def create(self, request, *args, **kwargs):

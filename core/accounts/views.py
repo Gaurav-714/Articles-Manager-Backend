@@ -67,7 +67,8 @@ class RegisterView(APIView):
 
             return Response({
                 "success": True,
-                "message": "Account created successfully. Please verify your email."
+                "message": "Account created successfully. Please verify your email.",
+                "data": serializer.data
             }, status=status.HTTP_201_CREATED)
 
         except Exception as ex:
@@ -106,7 +107,7 @@ class VerifyOTPView(APIView):
             if not otp_obj or not otp_obj.is_valid():
                 return Response({
                     "success": False,
-                    "error": "The UID id invalid or the OTP has expired."
+                    "error": "The OTP has expired. Please request for another one."
                 },status=status.HTTP_400_BAD_REQUEST)
 
             # OTP Verification
@@ -128,10 +129,10 @@ class VerifyOTPView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST) 
 
         except Exception as ex:
-            print(ex)
             return Response({
                 "success": False,
-                "message": "Something went wrong. Please try again."
+                "message": "Something went wrong. Please try again.",
+                "error": str(ex)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -163,10 +164,10 @@ class SendMailWithOTPView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as ex:
-            print(ex)
             return Response({
                 "success": False,
-                "error": "Something went wrong. Please try again."
+                "error": "Something went wrong. Please try again.",
+                "error": str(ex)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -252,10 +253,10 @@ class SetNewPasswordView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST) 
 
         except Exception as ex:
-            print(ex)
             return Response({
                 "success": False,
-                "message": "Something went wrong. Please try again."
+                "message": "Something went wrong. Please try again.",
+                "error": str(ex)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         

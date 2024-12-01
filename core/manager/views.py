@@ -212,8 +212,14 @@ class HandleApprovalRequestView(APIView):
                     "success": False,
                     "error": "Please specify action as 'approve' or 'reject'."
                 }, status=status.HTTP_400_BAD_REQUEST)
-
+            
             approval_request = WriteApprovalRequest.objects.get(uid=uid)
+            if not approval_request:
+                return Response({
+                    "success": False,
+                    "error": "Invalid UID. Please try again."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
             if action == 'approve':
                 approval_request.status = 'approved'
                 approval_request.user.has_approval = True

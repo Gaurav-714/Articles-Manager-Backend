@@ -19,8 +19,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         try:
             validate_password(value)
-        except ValidationError as e:
-            raise serializers.ValidationError(list(e.messages))
+        except ValidationError as ex:
+            raise serializers.ValidationError(list(ex.messages))
         return value
     
     def validate(self, data):
@@ -74,7 +74,7 @@ class LoginSerializer(serializers.Serializer):
         else:
             return {
                 "success": False,
-                "message": "Invalid credentials.",
+                "message": "Invalid credentials. Kindly check your password.",
                 "data": {}
             }
         
