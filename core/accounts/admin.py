@@ -4,7 +4,7 @@ from .models import UserModel, AccountVerificationOTP
 
 class UserAdmin(BaseUserAdmin):
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email', 'password', 'role')}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions', 'has_approval')}),
         ('Timestamps', {'fields': ('created_at', 'updated_at')}),
@@ -13,11 +13,10 @@ class UserAdmin(BaseUserAdmin):
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'first_name', 'last_name', 'password', 'role'),
-            #'fields': ('email', 'username', 'first_name', 'last_name', 'password'),
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
-    list_display = ('email', 'first_name', 'last_name', 'role','created_at', 'updated_at')
+    list_display = ('email', 'first_name', 'last_name', 'role', 'has_approval', 'updated_at')
     list_filter = ('is_staff', 'is_active', 'has_approval')
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)

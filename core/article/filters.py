@@ -16,11 +16,10 @@ class ArticleFilter(filters.FilterSet):
 
 class CategoryFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
-    description = filters.CharFilter(field_name="description", lookup_expr="icontains")
 
     class Meta:
         model = Category
-        fields = ['name', 'description']
+        fields = ['name']
 
 
 class TagFilter(filters.FilterSet):

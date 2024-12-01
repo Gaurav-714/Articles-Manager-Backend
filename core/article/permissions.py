@@ -1,34 +1,65 @@
 from rest_framework.permissions import BasePermission
 
-# Custom permission to allow only "Admin" to perform certain actions.
-class IsAdmin(BasePermission):
+class AdminPermissions(BasePermission):
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.method in ['GET']:
-                return True
-            elif request.user.is_superuser and request.user.role == 'admin':
-                return True
-            return False
+            return request.user.is_superuser and request.user.role == 'admin'
+
+    def has_object_permission(self, request, view, obj):
+            return request.user.is_superuser and request.user.role == 'admin'
+
+class ModeratorPermissions(BasePermission):
+    def has_permission(self, request, view):
+            return request.user.is_superuser and request.user.role == 'moderator'
+
+    def has_object_permission(self, request, view, obj):
+            return request.user.is_superuser and request.user.role == 'moderator'
+
+
+class ArticleAndCommentPermissions(BasePermission):
+    """
+    Custom permissions for Article and Comment:
+    - Any authenticated user can view articles and comments (GET).
+    - Only users with `has_approval` can create articles and comments (POST).
+    - Only the author of the article/comment can modify/delete it (PUT, PATCH, DELETE).
+    - Admins and moderators have full access (handled by a separate permission).
+    """
+
+    def has_permission(self, request, view):
+        # Allow viewing for any authenticated user
+        if request.method == 'GET':
+            return True
+        # Allow creation only if the user has approval
+        elif request.method == 'POST':
+            return request.user.has_approval
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser and request.user.role == 'admin':
+        # Allow read-only access for any authenticated user
+        if request.method == 'GET':
             return True
-        return obj.author == request.user # Users can only edit or delete their own article/category/tag
+        # Allow authors to modify/delete their own articles
+        return obj.author == request.user
 
 
-# Custom permission to allow only "Moderator" to perform certain actions.
-class IsModerator(BasePermission):
+class CategoryAndTagPermissions(BasePermission):
+    """
+    Custom permissions for Category and Tag:
+    - Any authenticated user can view Categories/Tags (GET).
+    - Only users with `has_approval` can create Categories/Tags (POST).
+    - Admins and moderators have full access (handled by a separate permissions).
+    """
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.method in ['GET']:
-                return True
-            elif request.user.is_staff or request.user.role == 'moderator':
-                return True
-            return False
+        # Allow viewing for any authenticated user
+        if request.method == 'GET':
+            return True
+        # Allow creation only if the user has approval
+        elif request.method == 'POST':
+            return request.user.has_approval
         return False
 
     def has_object_permission(self, request, view, obj):
-        if request.user.is_staff or request.user.role == 'moderator':
+        # Allow read-only access for any authenticated user
+        if request.method == 'GET':
             return True
-        return obj.author == request.user  # Users can only edit or delete their own article/category/tag
+        return False
+

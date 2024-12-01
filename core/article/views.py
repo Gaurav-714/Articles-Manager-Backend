@@ -8,8 +8,8 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 
-from .permissions import IsAdmin, IsModerator
 from .serializers import ArticleSerializer, CommentSerializer, CategorySerializer, TagSerializer
+from .permissions import *
 from .filters import ArticleFilter, CategoryFilter, TagFilter, CommentFilter
 from .models import Article, Comment, Category, Tag
 from .pagination import CustomPagination
@@ -20,27 +20,30 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsAdmin | IsModerator]
-
+    permission_classes = [
+        IsAuthenticated,
+        (AdminPermissions | ModeratorPermissions | CategoryAndTagPermissions)
+    ]
     # Pagination, Filtering, and Search
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = CategoryFilter
-    search_fields = ['name', 'description']
+    search_fields = ['name']
 
     def perform_create(self, serializer):
-        if not self.request.user.has_approval:
-            raise ValidationError("You are not approved to create Categories. Submit a request for approval.")
-        serializer.save(author=self.request.user)
+        serializer.save()
 
-    # Override create method to handle validation and custom exceptions
     def create(self, request, *args, **kwargs):
         try:
-            return super().create(request, *args, **kwargs) # Calls the parent class's create method
-        except ValidationError as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"detail": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return super().create(request, *args, **kwargs)
+        except ValidationError as ex:
+            return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            return Response({
+                "success": False,
+                "message": "An unexpected error occurred.",
+                "error": str(ex)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -48,8 +51,10 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsAdmin | IsModerator]
-
+    permission_classes = [
+        IsAuthenticated,
+        (AdminPermissions | ModeratorPermissions | CategoryAndTagPermissions)
+    ]
     # Pagination, Filtering, and Search
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -57,17 +62,30 @@ class TagViewSet(viewsets.ModelViewSet):
     search_fields = ['name']
 
     def perform_create(self, serializer):
-        if not self.request.user.has_approval:
-            raise ValidationError("You are not approved to create Tags. Submit a request for approval.")
-        serializer.save(author=self.request.user)
+        serializer.save()
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except ValidationError as ex:
+            return Response({"detail": str(ex)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as ex:
+            return Response({
+                "success": False,
+                "message": "An unexpected error occurred.",
+                "error": str(ex)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ArticleViewSet(viewsets.ModelViewSet):
     queryset = Article.objects.all().order_by('-created_at')
     serializer_class = ArticleSerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin | IsModerator]
-
+    permission_classes = [
+        IsAuthenticated,
+        (AdminPermissions | ModeratorPermissions | ArticleAndCommentPermissions)
+    ]    
     # Pagination, Filtering, and Search
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -75,39 +93,37 @@ class ArticleViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'content', 'category__name', 'tags__name']
 
     def perform_create(self, serializer):
-        if not self.request.user.has_approval:
-            raise ValidationError("You are not approved to write articles. Submit a request for approval.")
-        try:
-            serializer.save(author=self.request.user)
-        except ValidationError as e:
-            raise ValidationError({"message": str(e)})
-        except Exception as ex:
-            print(ex)
-            raise ValidationError({"message": "An unexpected error occurred while creating the article."})
-    
-    # Override create method to handle validation and custom exceptions
+        # The serializer now handles category and tag creation, no need to do it here.
+        article = serializer.save(author=self.request.user)
+        # Tags are already handled by the serializer (via tags.set), so no need to explicitly set them here.
+        return article
+
     def create(self, request, *args, **kwargs):
         try:
-            return super().create(request, *args, **kwargs) # Calls the parent class's create method
+            return super().create(request, *args, **kwargs)
         except ValidationError as ex:
             return Response({
                 "success": False,
                 "message": str(ex)
             }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
-            print(ex)
             return Response({
                 "success": False,
-                "message": "An unexpected error occurred."
+                "message": "An unexpected error occurred.",
+                "error": str(ex)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all().order_by('-created_at')
     serializer_class = CommentSerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin | IsModerator]
-
+    permission_classes = [
+        IsAuthenticated,
+        (AdminPermissions | ModeratorPermissions | ArticleAndCommentPermissions)
+    ]  
     # Pagination, Filtering, and Search
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -117,8 +133,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         try:
             serializer.save(author=self.request.user)
-        except ValidationError as e:
-            raise ValidationError({"message": str(e)})
+        except ValidationError as ex:
+            raise ValidationError({"message": str(ex)})
         except Exception as ex:
             print(ex)
             raise ValidationError({"message": "An unexpected error occurred while creating the comment."})
@@ -133,12 +149,12 @@ class CommentViewSet(viewsets.ModelViewSet):
                 "message": str(ex)
             }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
-            print(ex)
             return Response({
                 "success": False,
-                "message": "An unexpected error occurred."
+                "message": "An unexpected error occurred.",
+                "error": str(ex)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+ 
     # Custom method to retrieve comments for a specific article
     @action(detail=True, methods=['get'])
     def article_comments(self, request, uid=None):
