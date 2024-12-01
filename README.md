@@ -3,6 +3,8 @@
 
 This repository contains the backend API for the **Articles Management Application**, this **Content Management System (CMS)** is designed to handle comprehensive article and user management. Built using **Django REST Framework**, it integrates advanced **Role-Based Access Control (RBAC)** to enforce security and functionality segregation, ensuring a robust and scalable system.
 
+### API Documentation https://documenter.getpostman.com/view/32119544/2sAYBYfVbs
+
 ## Key Features
 
 1. **User Registration and Email Verification**:
@@ -87,8 +89,9 @@ RBAC is the backbone of the system, enforcing strict access policies to ensure s
 
 ### Authentication
 - `POST /auth/register/` - Register a new user.
-- `POST /auth/login/` - Log in and receive a JWT token.
+- `POST /auth/login/` - Log in and receive a JWT's access token.
 - `POST /auth/verify-otp/` - Verify email using OTP.
+- `POST /auth/resend-otp/` - Resend OTP if previous one has expired.
 
 ### Password Management
 - `POST /auth/forgot-password/` - Request an OTP to reset your password.
@@ -96,24 +99,36 @@ RBAC is the backbone of the system, enforcing strict access policies to ensure s
 - `PUT /auth/change-password/` - Change the password (Authenticated users only).
 
 ### Articles
-- `POST /api/articles/` - Create an article (Requires Moderator/Admin approval for publishing).
-- `GET /api/articles/` - List all articles (with pagination, search, and filters).
-- `GET /api/articles/{uid}/` - View an article. (Authenticated user)
-- `PUT /api/articles/{uid}/` - Edit an article (Author/Moderator/Admin).
-- `DELETE /api/articles/{uid}/` - Delete an article (Author/Moderator/Admin).
+- `POST /content/articles/` - Create an article (Requires Moderator/Admin approval for publishing).
+- `GET /content/articles/` - List all articles (with pagination, search, and filters).
+- `GET /content/articles/{uid}/` - View an article. (Authenticated user)
+- `PUT /content/articles/{uid}/` - Edit an article (Author/Moderator/Admin).
+- `DELETE /content/articles/{uid}/` - Delete an article (Author/Moderator/Admin).
 
 ### Comments
-- `POST /api/comments/` - Add a comment.
-- `GET /api/comments/{uid}/article_comments/` - List comments on an article (with search and pagination).
-- `PUT /api/comments/{uid}/` - Edit a comment (Author/Moderator/Admin).
-- `DELETE /api/comments/{uid}/` - Delete a comment (Author/Moderator/Admin).
+- `POST /content/comments/` - Add a comment.
+- `GET /content/comments/` - List comments on an article (with search and pagination).
+- `PUT /content/comments/{uid}/` - Edit a comment (Author/Moderator/Admin).
+- `DELETE /content/comments/{uid}/` - Delete a comment (Author/Moderator/Admin).
 
 ### Categories and Tags
-- `POST /api/categories/` - Create a category (Moderator/Admin).
-- `GET /api/categories/` - List categories (with filters and pagination).
-- `PUT /api/categories/{id}/` - Edit a category (Moderator/Admin).
-- `DELETE /api/categories/{id}/` - Delete a category (Moderator/Admin).
+- `POST /content/categories/` - Create a category (Moderator/Admin).
+- `GET /content/categories/` - List categories (with filters and pagination).
+- `PUT /content/categories/{id}/` - Edit a category (Moderator/Admin).
+- `DELETE /content/categories/{id}/` - Delete a category (Moderator/Admin).
 - Same endpoints are available for tags (replace 'categories' with 'tags').
+
+### Moderator Actions
+- `GET /manage/view-requests/` - Listout user requests for approval to post content.
+- `POST /manage/handle-requests/` - Approve or Reject user's requests.
+
+### Admin Actions
+- `POST /manage/create-role/` - Creation of new role by Admin.
+- `GET /manage/users/` - Listout users and view details (with filters, search and pagination).
+- `GET /manage/users/{uid}/` - View particular user's details.
+- `DELETE /manage/users/{uid}/` - Delete particular user.
+- `PUT /manage/users/{uid}/` - Update particular user.
+- `PATCH /manage/users/{uid}/` - Update particular user partially.
 
 ## System Workflow
 
