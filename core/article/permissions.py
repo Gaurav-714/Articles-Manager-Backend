@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission
 
+# Custom permissions for Admin to have full access over content
 class AdminPermissions(BasePermission):
     def has_permission(self, request, view):
             return request.user.is_superuser and request.user.role == 'admin'
@@ -7,6 +8,7 @@ class AdminPermissions(BasePermission):
     def has_object_permission(self, request, view, obj):
             return request.user.is_superuser and request.user.role == 'admin'
 
+# Custom permissions for Moderator to have full access to manage the content
 class ModeratorPermissions(BasePermission):
     def has_permission(self, request, view):
             return request.user.is_superuser and request.user.role == 'moderator'

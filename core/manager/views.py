@@ -7,23 +7,44 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import PermissionDenied
 
-from accounts.models import UserModel
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.auth import get_user_model
+from django.conf import settings
+
 from article.pagination import CustomPagination
-from .serializers import RoleCreateSerializer, ChangeRoleSerializer, ApprovalRequestSerializer
+from .serializers import ManageUserSerializer, ChangeRoleSerializer, ApprovalRequestSerializer
 from .permissions import IsAdmin, IsModerator
-from .filters import RequestsFilter
+from .filters import UsersFilter, RequestsFilter
 from .models import WriteApprovalRequest
 
+UserModel = get_user_model()
 
+# Viewset to manage all the users by the Admin (GET, POST, PUT, PATCH, DELETE)
+class ManageUserView(viewsets.ModelViewSet):
+    queryset = UserModel.objects.all().order_by('first_name')
+    serializer_class = ManageUserSerializer
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    # Pagination, Filtering and Searching
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = UsersFilter
+    search_fields = ['email', 'first_name', 'last_name', 'role', 'has_approval']
+
+
+# View to create new Admin or Moderator
 class CreateAdminOrModeratorView(APIView):
-    permission_classes = [IsAdmin]  # Only Admins can access this view
+    permission_classes = [IsAuthenticated, IsAdmin]  # Only Admins can access this view
 
     def post(self, request, *args, **kwargs):
         try:
             data = request.data
-            role = data.get('role')
+            role = data.get('role', '')
 
-            serializer = RoleCreateSerializer(data=data)
+            serializer = ManageUserSerializer(data=data)
             if not serializer.is_valid():
                 return Response({
                     "success" : False,
@@ -55,7 +76,7 @@ class CreateAdminOrModeratorView(APIView):
                     is_superuser=True,
                     has_approval=True
                 )
-            else:
+            else:                
                 user = UserModel.objects.create_moderator(
                     email=serializer.validated_data['email'],
                     first_name=serializer.validated_data['first_name'],
@@ -81,6 +102,14 @@ class CreateAdminOrModeratorView(APIView):
                 'is_superuser': user.is_superuser,
                 'has_approval': user.has_approval
             }
+            subject = "Account Registered On Articles Application"
+            message = render_to_string('confirmationMail.html',{
+                'user': user,
+                'password': request.data['password']
+            })
+            recipient_list = [user.email]
+            send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+
             return Response(response_data, status=status.HTTP_201_CREATED)
         
         except Exception as ex:
@@ -91,8 +120,9 @@ class CreateAdminOrModeratorView(APIView):
             }, status = status.HTTP_400_BAD_REQUEST)
 
 
+# View change role of an existing user
 class ChangeRoleView(APIView):
-    permission_classes = [IsAdmin]  # Only Admins can access this view
+    permission_classes = [IsAuthenticated, IsAdmin]  # Only Admins can access this view
 
     def post(self, request, *args, **kwargs):
         try:
@@ -155,12 +185,13 @@ class ChangeRoleView(APIView):
             }, status = status.HTTP_400_BAD_REQUEST)
 
 
+# View to list out all the pending requests for writing articles
 class ApprovalRequestsListView(viewsets.ReadOnlyModelViewSet):
-    queryset = WriteApprovalRequest.objects.filter().order_by('-created_at')
+    queryset = WriteApprovalRequest.objects.filter(status='pending').order_by('-created_at')
     serializer_class = ApprovalRequestSerializer
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAdmin | IsModerator]
+    permission_classes = [IsAuthenticated, (IsAdmin | IsModerator)]
 
     # Pagination and Filtering
     pagination_class = CustomPagination
@@ -168,9 +199,10 @@ class ApprovalRequestsListView(viewsets.ReadOnlyModelViewSet):
     filterset_class = RequestsFilter
 
 
+# View to handle user's requests by the Moderator/Admin (approve/reject)
 class HandleApprovalRequestView(APIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated, IsAdmin | IsModerator]
+    permission_classes = [IsAuthenticated, (IsAdmin | IsModerator)]
 
     def post(self, request, uid):        
         try:
@@ -187,6 +219,12 @@ class HandleApprovalRequestView(APIView):
                 approval_request.user.has_approval = True
                 approval_request.user.save()
                 approval_request.save()
+
+                subject = "Regarding Your Approval Request On Articles Application"
+                message = "Your request has been approved. Now you can write and publish your articles on the application."
+                recipient_list = [approval_request.user.email]
+                send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+
                 return Response({
                     "success": True,
                     "message": "Request approved successfully."
@@ -195,6 +233,12 @@ class HandleApprovalRequestView(APIView):
             elif action == 'reject':
                 approval_request.status = 'rejected'
                 approval_request.save()
+
+                subject = "Regarding Your Approval Request On Articles Application"
+                message = "Sorry, your request has been rejected. You are not allowed to publish your articles on the application."
+                recipient_list = [approval_request.user.email]
+                send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+
                 return Response({
                     "success": True,
                     "message": "Request rejected successfully."
@@ -205,4 +249,3 @@ class HandleApprovalRequestView(APIView):
                 "success": False,
                 "error": "Request not found."
             }, status=status.HTTP_404_NOT_FOUND)
-

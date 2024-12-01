@@ -28,14 +28,12 @@ def sendMailWithOTP(user, purpose):
     # Email content
     subject = "OTP From Articles Application"
     message = render_to_string(
-        'verificationMail.html',
-        {
+        'verificationMail.html',{
             'name': user.first_name,
             'uid': user.uid,
             'otp': str(otp),
             'purpose': purpose
-        },
-    )
+        })
     recipient_list = [user.email]
     send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
 
