@@ -3,6 +3,12 @@
 
 This repository contains the backend API for the **Articles Management Application**, this **Content Management System (CMS)** is designed to handle comprehensive article and user management. Built using **Django REST Framework**, it integrates advanced **Role-Based Access Control (RBAC)** to enforce security and functionality segregation, ensuring a robust and scalable system.
 
+## API Documentation
+   https://documenter.getpostman.com/view/32119544/2sAYBYfVbs
+
+## API Key
+   https://api.postman.com/collections/32119544-e5f24412-61e3-4137-bde2-5ec2c6253f37?access_key=PMAT-01JE286BY696WZZ87YB2JD19HF
+
 ## Key Features
 
 1. **User Registration and Email Verification**:
