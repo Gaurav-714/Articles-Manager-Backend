@@ -33,7 +33,10 @@ class ArticleAndCommentPermissions(BasePermission):
         # Allow creation only if the user has approval
         elif request.method == 'POST':
             return request.user.has_approval
+        elif request.method in ['PUT', 'PATCH', 'DELETE']:
+            return request.user.is_authenticated
         return False
+
 
     def has_object_permission(self, request, view, obj):
         # Allow read-only access for any authenticated user
@@ -42,6 +45,7 @@ class ArticleAndCommentPermissions(BasePermission):
         if request.method in ['PUT','PATCH','DELETE']:
             # Allow authors to modify/delete their own articles
             return obj.author == request.user
+        return False
         
 
 
@@ -59,7 +63,7 @@ class CategoryAndTagPermissions(BasePermission):
         # Allow creation only if the user has approval
         elif request.method == 'POST':
             return request.user.has_approval
-        return False
+        return request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         # Allow read-only access for any authenticated user
